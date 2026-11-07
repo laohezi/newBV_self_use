@@ -1,6 +1,7 @@
 package dev.frost819.newbv.biliapi.entity.video.season
 
 import dev.frost819.newbv.biliapi.entity.video.Dimension
+import dev.frost819.newbv.biliapi.entity.video.VideoPage
 
 /**
  * 剧集视频
@@ -16,6 +17,7 @@ import dev.frost819.newbv.biliapi.entity.video.Dimension
  * @param cover 封面
  * @param duration 时长
  * @param dimension 分辨率
+ * @param pages 分 P 列表，仅 UGC 合集分集可用（gRPC 通道不提供），空列表表示未知或仅 1 P
  */
 data class Episode(
     val id: Int,
@@ -28,6 +30,7 @@ data class Episode(
     val cover: String,
     val duration: Int,
     val dimension: Dimension?,
+    val pages: List<VideoPage> = emptyList(),
 ) {
     companion object {
         fun fromEpisode(episode: bilibili.app.view.v1.Episode) =
@@ -54,6 +57,7 @@ data class Episode(
                 cover = episode.arc.pic,
                 duration = episode.arc.duration,
                 dimension = Dimension.fromDimension(episode.page.dimension),
+                pages = episode.pages.map { VideoPage.fromVideoPage(it) },
             )
 
         fun fromEpisode(episode: dev.frost819.newbv.biliapi.http.entity.season.Episode) =

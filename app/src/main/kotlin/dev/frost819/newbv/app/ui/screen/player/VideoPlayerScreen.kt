@@ -30,6 +30,7 @@ import dev.frost819.newbv.app.ui.component.player.VideoPlayerController
 import dev.frost819.newbv.app.ui.component.rememberDoublePressExit
 import dev.frost819.newbv.app.ui.component.videocard.VideoCardData
 import dev.frost819.newbv.app.ui.component.videocard.isPgc
+import dev.frost819.newbv.app.ui.navigation.UserCollectionRoute
 import dev.frost819.newbv.app.ui.navigation.UserSpaceRoute
 import dev.frost819.newbv.app.ui.navigation.navigateFromVideoCard
 import dev.frost819.newbv.app.ui.navigation.navigateToVideoDetailFromPlayer
@@ -284,7 +285,14 @@ fun VideoPlayerScreen(
         onToggleSubtitle = { subtitleViewModel.toggleSubtitle() },
         onGoToUpPage = {
             logger.info { "[NAV] playerToUp mid=${uiState.authorMid}" }
-            navController.navigate(UserSpaceRoute(mid = uiState.authorMid, name = uiState.authorName)) {
+            navController.navigate(
+                UserSpaceRoute(
+                    mid = uiState.authorMid,
+                    name = uiState.authorName,
+                    // 番剧的「UP 主」不是稿件作者，投稿列表里不含当前集，不做定位
+                    anchorAid = if (uiState.isPgc) 0L else uiState.aid,
+                ),
+            ) {
                 launchSingleTop = true
             }
         },
@@ -305,6 +313,20 @@ fun VideoPlayerScreen(
             playerViewModel.pausePlayback()
             danmakuViewModel.pause()
             showCommentsDialog = true
+        },
+        onGoToCollection = {
+            logger.info { "[NAV] playerToCollection seasonId=${uiState.ugcSeasonId} mid=${uiState.authorMid}" }
+            navController.navigate(
+                UserCollectionRoute(
+                    mid = uiState.authorMid,
+                    seasonId = uiState.ugcSeasonId,
+                    title = uiState.ugcSeasonTitle,
+                    name = uiState.authorName,
+                    anchorAid = uiState.aid,
+                ),
+            ) {
+                launchSingleTop = true
+            }
         },
         onMediaProfileSettingChange = { action -> playerViewModel.updateMediaProfile(action) },
         onAspectRatioChange = { ratio -> playerViewModel.updateVideoAspectRatio(ratio) },

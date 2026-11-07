@@ -312,7 +312,12 @@ private fun VideoDetailContent(
             },
             onClickUp = {
                 navController.navigate(
-                    UserSpaceRoute(mid = detail.author.mid, name = detail.author.name, face = detail.author.face),
+                    UserSpaceRoute(
+                        mid = detail.author.mid,
+                        name = detail.author.name,
+                        face = detail.author.face,
+                        anchorAid = detail.aid,
+                    ),
                 )
             },
             focusSaver = focusSaver,

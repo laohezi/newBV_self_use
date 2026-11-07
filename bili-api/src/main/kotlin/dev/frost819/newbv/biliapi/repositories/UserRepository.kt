@@ -6,6 +6,9 @@ import bilibili.app.dynamic.v2.dynVideoReq
 import dev.frost819.newbv.biliapi.entity.ApiType
 import dev.frost819.newbv.biliapi.entity.user.DynamicVideoData
 import dev.frost819.newbv.biliapi.entity.user.FollowedUser
+import dev.frost819.newbv.biliapi.entity.user.SpaceSeasonArchivesData
+import dev.frost819.newbv.biliapi.entity.user.SpaceSeasonListData
+import dev.frost819.newbv.biliapi.entity.user.SpaceSeasonPage
 import dev.frost819.newbv.biliapi.entity.user.SpaceVideoData
 import dev.frost819.newbv.biliapi.entity.user.SpaceVideoOrder
 import dev.frost819.newbv.biliapi.entity.user.SpaceVideoPage
@@ -189,6 +192,52 @@ class UserRepository(
                 SpaceVideoData.fromAppSpaceVideoData(appSpaceVideoData)
             }
         }
+
+    /**
+     * 获取用户空间合集列表（仅 Web 接口，无 App 等价接口）。
+     *
+     * @param mid 用户 MID
+     * @param page 分页状态
+     */
+    suspend fun getSpaceSeasons(
+        mid: Long,
+        page: SpaceSeasonPage = SpaceSeasonPage(),
+    ): SpaceSeasonListData {
+        val data =
+            BiliHttpApi
+                .getWebUserSpaceSeasons(
+                    mid = mid,
+                    pageNumber = page.nextPageNumber,
+                    pageSize = page.pageSize,
+                ).getResponseData()
+        return SpaceSeasonListData.fromWebSpaceSeasonListData(data)
+    }
+
+    /**
+     * 获取合集内视频列表（仅 Web 接口，无 App 等价接口）。
+     *
+     * @param mid 合集所属用户 MID
+     * @param seasonId 合集 id
+     * @param page 分页状态
+     * @param sortReverse 是否倒序
+     */
+    suspend fun getSpaceSeasonArchives(
+        mid: Long,
+        seasonId: Long,
+        page: SpaceSeasonPage = SpaceSeasonPage(pageSize = 30),
+        sortReverse: Boolean = false,
+    ): SpaceSeasonArchivesData {
+        val data =
+            BiliHttpApi
+                .getWebUserSpaceSeasonArchives(
+                    mid = mid,
+                    seasonId = seasonId,
+                    pageNumber = page.nextPageNumber,
+                    pageSize = page.pageSize,
+                    sortReverse = sortReverse,
+                ).getResponseData()
+        return SpaceSeasonArchivesData.fromWebSpaceSeasonArchivesData(seasonId = seasonId, data = data)
+    }
 
     suspend fun getDynamicVideos(
         page: Int,

@@ -312,6 +312,9 @@ class PlayerViewModel
         ) {
             videoInfoRepository.loadVideoDetail(aid, getApiType(), bvid)
             val detail = videoInfoRepository.videoDetail.value
+            // 分 P 优先、合集兜底：单分 P 视频属于 UGC 合集时，用合集分集填充播放列表，
+            // 使上键分集面板在任意入口下都能看到合集内容（与从详情页合集分集进入一致）
+            detail?.let { videoInfoRepository.applySeasonPlaylist(it) }
             // 仅采纳属于当前视频的历史，避免误用其它 aid 的进度
             val matched = videoInfoRepository.videoSharedState.value?.takeIf { it.aid == aid }
             val historyCid = matched?.lastPlayedCid ?: 0L
@@ -333,6 +336,8 @@ class PlayerViewModel
                     lastPlayed = if (targetCid == historyCid && historyTime > 0) historyTime else 0,
                     authorMid = detail?.author?.mid ?: state.authorMid,
                     authorName = detail?.author?.name ?: state.authorName,
+                    ugcSeasonId = detail?.ugcSeason?.id?.toLong() ?: 0L,
+                    ugcSeasonTitle = detail?.ugcSeason?.title ?: "",
                 )
             }
         }
@@ -704,6 +709,8 @@ class PlayerViewModel
                     epid = newVideo.epid,
                     seasonId = newVideo.seasonId ?: 0,
                     title = newVideo.title,
+                    ugcSeasonId = 0,
+                    ugcSeasonTitle = "",
                     lastPlayed = 0,
                     isBuffering = true,
                     playerState = PlayerState.Ready,
@@ -733,6 +740,11 @@ class PlayerViewModel
             // 通知 UI 层重载弹幕/字幕（非阻塞，避免卡住 playNewVideo）
             viewModelScope.launch { _videoSwitchEvent.emit(VideoSwitchEvent(newVideo.aid, newVideo.cid)) }
 
+            // 列表兜底写入必须早于详情加载：详情加载后可能用合集分集替换整个列表
+            if (shouldUpdateList) {
+                videoInfoRepository.updateVideoList(listOf(newVideo))
+            }
+
             // 异步加载详情 + 历史进度（不阻塞 playVideoWithResources）
             if (shouldUpdateDetail) {
                 viewModelScope.launch(Dispatchers.IO) {
@@ -745,9 +757,6 @@ class PlayerViewModel
                         _uiState.update { it.copy(lastPlayed = historyTime) }
                     }
                 }
-            }
-            if (shouldUpdateList) {
-                videoInfoRepository.updateVideoList(listOf(newVideo))
             }
 
             loadVideoWithResources()

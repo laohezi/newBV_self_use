@@ -28,6 +28,8 @@ data class PlayerUiState(
     val seasonId: Int = 0,
     val authorMid: Long = 0,
     val authorName: String = "",
+    val ugcSeasonId: Long = 0,
+    val ugcSeasonTitle: String = "",
     val title: String = "",
     val onlineWatching: String = "",
     val videoHeight: Int = 0,

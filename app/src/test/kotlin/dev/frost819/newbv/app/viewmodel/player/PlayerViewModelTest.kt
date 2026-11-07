@@ -1167,6 +1167,7 @@ class PlayerViewModelTest {
         val detail = mockk<VideoDetail>()
         every { detail.cid } returns cid
         every { detail.author } returns Author(mid = 42L, name = "UP", face = "face")
+        every { detail.ugcSeason } returns null
         return detail
     }
 

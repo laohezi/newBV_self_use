@@ -79,18 +79,37 @@ object LiveFollowRoute
 
 // ── 用户 ──────────────────────────────────────────────────────────────
 
-/** 用户空间页。 */
+/**
+ * 用户空间页。
+ *
+ * @property anchorAid 进入后需要定位（滚动+聚焦）的视频 aid，0 表示不定位
+ */
 @Serializable
 data class UserSpaceRoute(
     val mid: Long,
     val name: String? = null,
     val face: String? = null,
+    val anchorAid: Long = 0L,
 )
 
 /** 关注列表页。 */
 @Serializable
 data class FollowRoute(
     val mid: Long,
+)
+
+/**
+ * 用户合集详情页（合集内视频列表）。
+ *
+ * @property anchorAid 进入后需要定位（滚动+聚焦）的视频 aid，0 表示不定位
+ */
+@Serializable
+data class UserCollectionRoute(
+    val mid: Long,
+    val seasonId: Long,
+    val title: String = "",
+    val name: String = "",
+    val anchorAid: Long = 0L,
 )
 
 // ── 番剧/PGC ──────────────────────────────────────────────────────────

@@ -43,6 +43,8 @@ import dev.frost819.newbv.biliapi.http.entity.user.RelationStat
 import dev.frost819.newbv.biliapi.http.entity.user.UserCardData
 import dev.frost819.newbv.biliapi.http.entity.user.UserFollowData
 import dev.frost819.newbv.biliapi.http.entity.user.UserInfoData
+import dev.frost819.newbv.biliapi.http.entity.user.WebSpaceSeasonArchivesData
+import dev.frost819.newbv.biliapi.http.entity.user.WebSpaceSeasonListData
 import dev.frost819.newbv.biliapi.http.entity.user.WebSpaceVideoData
 import dev.frost819.newbv.biliapi.http.entity.user.favorite.FavoriteFolderInfo
 import dev.frost819.newbv.biliapi.http.entity.user.favorite.FavoriteFolderInfoListData
@@ -1390,6 +1392,58 @@ object BiliHttpApi {
                 )
                 parameter("dm_img_inter", "{\"ds\":[],\"wh\":[4769,2793,43],\"of\":[285,570,285]}")
                 header("referer", "https://space.bilibili.com")
+            }.body()
+
+    /**
+     * 获取用户[mid]的合集与系列列表（Web）。
+     *
+     * 对应接口：`GET /x/polymer/web-space/seasons_series_list`
+     * 无需登录，无 WBI 签名要求。
+     *
+     * @param mid 用户 MID
+     * @param pageNumber 页码，从 1 开始
+     * @param pageSize 每页项数
+     */
+    suspend fun getWebUserSpaceSeasons(
+        mid: Long,
+        pageNumber: Int = 1,
+        pageSize: Int = 20,
+    ): BiliResponse<WebSpaceSeasonListData> =
+        client
+            .get("/x/polymer/web-space/seasons_series_list") {
+                parameter("mid", mid)
+                parameter("page_num", pageNumber)
+                parameter("page_size", pageSize)
+                header("referer", "https://space.bilibili.com/$mid")
+            }.body()
+
+    /**
+     * 获取合集[seasonId]内的视频列表（Web）。
+     *
+     * 对应接口：`GET /x/polymer/web-space/seasons_archives_list`
+     * 无需登录，无 WBI 签名要求。
+     *
+     * @param mid 合集所属用户 MID
+     * @param seasonId 合集 id
+     * @param pageNumber 页码，从 1 开始
+     * @param pageSize 每页项数
+     * @param sortReverse 是否倒序（false：按合集顺序正序）
+     */
+    suspend fun getWebUserSpaceSeasonArchives(
+        mid: Long,
+        seasonId: Long,
+        pageNumber: Int = 1,
+        pageSize: Int = 30,
+        sortReverse: Boolean = false,
+    ): BiliResponse<WebSpaceSeasonArchivesData> =
+        client
+            .get("/x/polymer/web-space/seasons_archives_list") {
+                parameter("mid", mid)
+                parameter("season_id", seasonId)
+                parameter("sort_reverse", sortReverse)
+                parameter("page_num", pageNumber)
+                parameter("page_size", pageSize)
+                header("referer", "https://space.bilibili.com/$mid/channel/collectiondetail?sid=$seasonId")
             }.body()
 
     suspend fun getAppUserSpaceVideos(

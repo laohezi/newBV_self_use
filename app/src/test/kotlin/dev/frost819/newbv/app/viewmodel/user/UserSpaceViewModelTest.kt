@@ -291,6 +291,107 @@ class UserSpaceViewModelTest {
         }
 
     // ------------------------------------------------------------------
+    // anchor locate (打开 UP 主页面定位到当前视频)
+    // ------------------------------------------------------------------
+
+    @Test
+    fun `init with anchorAid keeps paging until anchor video is found`() {
+        runTest(testDispatcher) {
+            var call = 0
+            coEvery { userRepository.getSpaceVideos(any(), any(), any(), any()) } coAnswers {
+                call++
+                if (call < 3) {
+                    fakeVideoData(videos = listOf(fakeVideo(call.toLong())), hasNext = true)
+                } else {
+                    fakeVideoData(videos = listOf(fakeVideo(99)), hasNext = true)
+                }
+            }
+
+            viewModel = createViewModel()
+            viewModel.init(1L, "测试UP", anchorAid = 99L)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertThat(state.anchorAid).isEqualTo(99L)
+            assertThat(state.videos.map { it.aid }).contains(99L)
+            coVerify(exactly = 3) { userRepository.getSpaceVideos(any(), any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `init with anchorAid stops paging once anchor is in the first page`() {
+        runTest(testDispatcher) {
+            coEvery { userRepository.getSpaceVideos(any(), any(), any(), any()) } returns
+                fakeVideoData(videos = listOf(fakeVideo(1), fakeVideo(2)), hasNext = true)
+
+            viewModel = createViewModel()
+            viewModel.init(1L, "测试UP", anchorAid = 2L)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { userRepository.getSpaceVideos(any(), any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `init with anchorAid stops paging when no more pages`() {
+        runTest(testDispatcher) {
+            coEvery { userRepository.getSpaceVideos(any(), any(), any(), any()) } returns
+                fakeVideoData(videos = listOf(fakeVideo(1)), hasNext = false)
+
+            viewModel = createViewModel()
+            viewModel.init(1L, "测试UP", anchorAid = 99L)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { userRepository.getSpaceVideos(any(), any(), any(), any()) }
+            assertThat(
+                viewModel.uiState.value.videos
+                    .map { it.aid },
+            ).doesNotContain(99L)
+        }
+    }
+
+    @Test
+    fun `init with anchorAid caps the number of auto loaded pages`() {
+        runTest(testDispatcher) {
+            var call = 0
+            coEvery { userRepository.getSpaceVideos(any(), any(), any(), any()) } coAnswers {
+                call++
+                fakeVideoData(videos = listOf(fakeVideo(call.toLong())), hasNext = true)
+            }
+
+            viewModel = createViewModel()
+            viewModel.init(1L, "测试UP", anchorAid = 9999L)
+            advanceUntilIdle()
+
+            // 首屏 1 次 + 自动翻页上限 10 次
+            coVerify(exactly = 11) { userRepository.getSpaceVideos(any(), any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `markAnchorLocated stops further auto paging`() {
+        runTest(testDispatcher) {
+            var call = 0
+            coEvery { userRepository.getSpaceVideos(any(), any(), any(), any()) } coAnswers {
+                call++
+                fakeVideoData(videos = listOf(fakeVideo(call.toLong())), hasNext = true)
+            }
+
+            viewModel = createViewModel()
+            viewModel.init(1L, "测试UP", anchorAid = 9999L)
+            advanceUntilIdle()
+
+            val callsBeforeMark = call
+            viewModel.markAnchorLocated()
+            viewModel.init(1L, "测试UP", anchorAid = 9999L)
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.anchorLocated).isTrue()
+            assertThat(call).isEqualTo(callsBeforeMark)
+        }
+    }
+
+    // ------------------------------------------------------------------
     // App apiType mapping
     // ------------------------------------------------------------------
 

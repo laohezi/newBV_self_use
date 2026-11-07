@@ -97,6 +97,8 @@ import kotlinx.coroutines.delay
  * @param onGoToUpPage 跳转 UP 主页面回调
  * @param onShowInteraction 打开视频交互弹窗回调
  * @param onShowComments 打开评论弹窗回调
+ * @param hasUgcSeason 当前视频是否属于 UGC 合集（决定是否显示「查看合集」按钮）
+ * @param onGoToCollection 打开所属合集回调
  */
 @Composable
 fun ControllerVideoInfo(
@@ -126,6 +128,8 @@ fun ControllerVideoInfo(
     onGoToUpPage: () -> Unit,
     onShowInteraction: () -> Unit,
     onShowComments: () -> Unit,
+    hasUgcSeason: Boolean = false,
+    onGoToCollection: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -172,6 +176,8 @@ fun ControllerVideoInfo(
                 onGoToUpPage = onGoToUpPage,
                 onShowInteraction = onShowInteraction,
                 onShowComments = onShowComments,
+                hasUgcSeason = hasUgcSeason,
+                onGoToCollection = onGoToCollection,
             )
         }
     }
@@ -283,6 +289,8 @@ fun ControllerVideoInfoBottom(
     onGoToUpPage: () -> Unit,
     onShowInteraction: () -> Unit,
     onShowComments: () -> Unit,
+    hasUgcSeason: Boolean = false,
+    onGoToCollection: () -> Unit = {},
 ) {
     val seekFocusRequester = remember { FocusRequester() }
     val buttonsFocusRequester = remember { FocusRequester() }
@@ -434,6 +442,9 @@ fun ControllerVideoInfoBottom(
                     add(ControllerIcon(R.drawable.info_24px, "视频信息", onGoToVideoInfo))
                     add(ControllerIcon(R.drawable.contact_page_24px, "up主页", onGoToUpPage))
                     add(ControllerIcon(R.drawable.related_videos_24px, "相关视频", onShowRelatedVideos))
+                    if (hasUgcSeason) {
+                        add(ControllerIcon(R.drawable.collection_24px, "查看合集", onGoToCollection))
+                    }
                 }
                 add(
                     ControllerIcon(

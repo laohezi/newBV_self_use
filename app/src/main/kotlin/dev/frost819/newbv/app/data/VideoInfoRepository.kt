@@ -156,18 +156,75 @@ class VideoInfoRepository
         /**
          * 为列表中的每个视频加载 UGC 分 P 信息。
          *
-         * 仅对有多分 P 的视频生效。
+         * 仅对有多分 P 的视频生效；已带 [VideoListItem.ugcPages] 的条目
+         * （如 [buildSeasonPlaylist] 由合集详情预填）直接跳过，避免整套合集逐条请求。
          *
          * @param preferApiType 接口类型
          */
         suspend fun updateUgcPages(preferApiType: ApiType) {
             _videoList.update { oldList ->
                 oldList.map { item ->
-                    runCatching {
-                        val pages = videoDetailRepository.getUgcPages(aid = item.aid, preferApiType = preferApiType)
-                        if (pages.size > 1) item.copy(ugcPages = pages) else item
-                    }.getOrElse { item }
+                    if (item.ugcPages != null) {
+                        item
+                    } else {
+                        runCatching {
+                            val pages = videoDetailRepository.getUgcPages(aid = item.aid, preferApiType = preferApiType)
+                            if (pages.size > 1) item.copy(ugcPages = pages) else item
+                        }.getOrElse { item }
+                    }
                 }
+            }
+        }
+
+        /**
+         * 按「分 P 优先、合集兜底」更新播放列表。
+         *
+         * 仅在适用时替换列表；已就绪的同构列表不重建，保留已补全的分 P，避免
+         * 切换分集时反复请求解析分 P。见 [buildSeasonPlaylist]。
+         *
+         * @param detail 视频详情
+         */
+        fun applySeasonPlaylist(detail: VideoDetail) {
+            val playlist = buildSeasonPlaylist(detail) ?: return
+            _videoList.update { old ->
+                if (old.map { it.aid } == playlist.map { it.aid }) {
+                    old
+                } else {
+                    playlist.map { item ->
+                        val previous = old.firstOrNull { it.aid == item.aid }
+                        if (previous?.ugcPages != null) item.copy(ugcPages = previous.ugcPages) else item
+                    }
+                }
+            }
+        }
+
+        /**
+         * 按「分 P 优先、合集兜底」构建播放列表。
+         *
+         * 视频自身有多分 P 时返回 null，交由 [updateUgcPages] 以嵌套分 P 方式展示；
+         * 单分 P 且属于 UGC 合集时，返回当前视频所在分节的全部分集，使播放器
+         * 上键分集面板在任意入口（详情页、封面直进、合集页）下都能看到合集内容。
+         *
+         * @param detail 视频详情
+         * @return 合集分集播放列表；不适用时返回 null
+         */
+        fun buildSeasonPlaylist(detail: VideoDetail): List<VideoListItem>? {
+            if (detail.pages.size > 1) return null
+            val episodes =
+                detail.ugcSeason
+                    ?.sections
+                    ?.firstOrNull { section -> section.episodes.any { it.aid == detail.aid } }
+                    ?.episodes
+                    ?: return null
+            if (episodes.size <= 1) return null
+            return episodes.map { episode ->
+                VideoListItem(
+                    aid = episode.aid,
+                    cid = episode.cid,
+                    title = episode.title,
+                    // 仅多分 P 时预填，单分 P / 未知留给 updateUgcPages 按需补全
+                    ugcPages = episode.pages.takeIf { it.size > 1 },
+                )
             }
         }
 

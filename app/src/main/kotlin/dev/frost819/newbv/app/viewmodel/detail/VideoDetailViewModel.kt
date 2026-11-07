@@ -169,7 +169,13 @@ class VideoDetailViewModel
             val detail = _uiState.value.detail ?: return
             val partVideoList =
                 detail.ugcSeason?.sections?.getOrNull(sectionIndex)?.episodes?.map {
-                    VideoListItem(aid = it.aid, cid = it.cid, title = it.title)
+                    VideoListItem(
+                        aid = it.aid,
+                        cid = it.cid,
+                        title = it.title,
+                        // 分集自带分 P 时直接带出，null 交给 updateUgcPages 补全
+                        ugcPages = it.pages.takeIf { pages -> pages.size > 1 },
+                    )
                 } ?: return
             videoInfoRepository.updateVideoList(partVideoList)
         }

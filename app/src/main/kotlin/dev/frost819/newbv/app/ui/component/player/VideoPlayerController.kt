@@ -92,6 +92,7 @@ fun VideoPlayerController(
     onGoToVideoDetail: () -> Unit,
     onShowInteraction: () -> Unit,
     onShowComments: () -> Unit,
+    onGoToCollection: () -> Unit,
     onMediaProfileSettingChange: (MediaProfileSettingAction) -> Unit,
     onAspectRatioChange: (VideoAspectRatio) -> Unit,
     onPlaySpeedChange: (Float) -> Unit,
@@ -571,6 +572,8 @@ fun VideoPlayerController(
                 onGoToUpPage = onGoToUpPage,
                 onShowInteraction = onShowInteraction,
                 onShowComments = onShowComments,
+                hasUgcSeason = !isPgc && uiState.ugcSeasonId != 0L,
+                onGoToCollection = onGoToCollection,
             )
 
             // 分集列表
