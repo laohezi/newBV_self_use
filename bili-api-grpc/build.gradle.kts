@@ -29,11 +29,13 @@ protobuf {
         artifact = "com.google.protobuf:protoc:3.25.5"
     }
     plugins {
+        // 代码生成器必须与 grpc 运行时同版本：1.72.0 及更早的 osx-aarch_64 构件
+        // 实为 x86_64 二进制，在 Apple Silicon 上无法执行（上游打包问题，1.76.0 起修复）
         create("java") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.72.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.76.0"
         }
         create("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.72.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.76.0"
         }
         create("grpckt") {
             artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"

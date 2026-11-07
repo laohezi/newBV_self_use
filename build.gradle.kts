@@ -146,6 +146,23 @@ subprojects {
             )
         }
     }
+
+    // Release 构建跳过 lint：自用分支不参与发布质量门禁，节省构建时间
+    plugins.withId("com.android.application") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension>("android") {
+            lint {
+                checkReleaseBuilds = false
+            }
+        }
+    }
+
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension>("android") {
+            lint {
+                checkReleaseBuilds = false
+            }
+        }
+    }
 }
 
 apply(plugin = "jacoco")

@@ -56,6 +56,11 @@ android {
             "CRASH_REPORT_TOKEN",
             "\"${localProperties.getProperty("crashReport.token", "")}\"",
         )
+
+        ndk {
+            // 目标设备为 ARM TV 盒子，x86/x86_64 仅供模拟器，不打包
+            abiFilters += "arm64-v8a"
+        }
     }
 
     buildTypes {
